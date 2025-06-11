@@ -21,6 +21,6 @@ exports.loginUser = async(req,res)=>{
         }
     }
     catch(err){
-        res.status(400).json(err);
+        res.status(400).json({message:"no such user exist"});
     }
 }
