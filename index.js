@@ -7,6 +7,7 @@ const categoriesRouter = require('./routes/Category');
 const brandsRouter = require('./routes/Brand');
 const usersRouter = require('./routes/User');
 const authRouter = require('./routes/Auth');
+const cartRouter = require('./routes/Cart');
 const cors = require('cors');
 
 const port = process.env.PORT;
@@ -20,6 +21,7 @@ server.use('/category',categoriesRouter.router);
 server.use('/brands',brandsRouter.router);
 server.use('/users',usersRouter.router);
 server.use('/auth',authRouter.router);
+server.use('/cart',cartRouter.router);
 
 async function main(){
     mongoose.connect('mongodb://127.0.0.1:27017/ecommerce-full-stack-databaase');
