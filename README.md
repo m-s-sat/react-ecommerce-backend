@@ -53,6 +53,3 @@ Give a ⭐️ if this project helped you!
 
 Copyright © 2025 [Mrinal Satyarthi](https://github.com/m-s-sat).<br />
 This project is [ISC](https://github.com/m-s-sat/react-ecommerce-backend/blob/master/LICENSE) licensed.
-
-***
-_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
