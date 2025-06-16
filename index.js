@@ -7,6 +7,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const express_session = require('express-session');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
+const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const productRouters = require('./routes/Products');
@@ -18,15 +19,17 @@ const cartRouter = require('./routes/Cart');
 const orderRouter = require('./routes/Order');
 const cors = require('cors');
 const { User } = require('./model/User');
-const { isAuth, sanitizeUser } = require('./services/common');
+const { isAuth, sanitizeUser, cookieExtractor } = require('./services/common');
 
 const port = process.env.PORT;
 
 const SECRET_KEY = process.env.SECRET_KEY;
 const opts = {};
-opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+opts.jwtFromRequest = cookieExtractor;
 opts.secretOrKey = SECRET_KEY;
 
+server.use(express.static('build'));
+server.use(cookieParser());
 server.use(express.json());
 server.use(cors({
     exposedHeaders:['X-Total-Count']
@@ -56,7 +59,7 @@ passport.use('local',new LocalStrategy(
                     return done(null, false, {message:'invalid credentials'});
                 }
                 const token = jwt.sign(sanitizeUser(user),SECRET_KEY);
-                done(null, token);
+                done(null, {token});
             })
         }
     catch(err){
@@ -67,7 +70,7 @@ passport.use('local',new LocalStrategy(
 
 passport.use('jwt',new JwtStrategy(opts,async function(jwt_payload,done){
     try{
-        const user = await User.findOne({id:jwt_payload.sub});
+        const user = await User.findById(jwt_payload.id);
         if(user) return done(null,sanitizeUser(user));
         else return done(null,false);
     }
