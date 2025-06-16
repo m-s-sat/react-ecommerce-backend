@@ -46,18 +46,19 @@ server.use('/cart',isAuth(),cartRouter.router);
 server.use('/orders',isAuth(),orderRouter.router);
 
 passport.use('local',new LocalStrategy(
-    async function (username, password, done){
+    {usernameField:'email'},
+    async function (email, password, done){
         try{
-            const user = await User.findOne({email:username});
+            const user = await User.findOne({email:email});
             if(!user) done(null, false, {message:'no such user email'});
             crypto.pbkdf2(password,user.salt,310000,32,'sha256',async function(err,hashedPassword){
-            if(!crypto.timingSafeEqual(user.password, hashedPassword)){
-                return done(null, false, {message:'invalid credentials'});
-            }
-            const token = jwt.sign(sanitizeUser(user),SECRET_KEY);
-            done(null, token);
-        })
-    }
+                if(!crypto.timingSafeEqual(user.password, hashedPassword)){
+                    return done(null, false, {message:'invalid credentials'});
+                }
+                const token = jwt.sign(sanitizeUser(user),SECRET_KEY);
+                done(null, token);
+            })
+        }
     catch(err){
         done(err);
     }
@@ -77,7 +78,6 @@ passport.use('jwt',new JwtStrategy(opts,async function(jwt_payload,done){
         
     })
 );
-
 // this create session variable req.user on being called from callback
 passport.serializeUser(function(user,cb){
     process.nextTick(function(){
