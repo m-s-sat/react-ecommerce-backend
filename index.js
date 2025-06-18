@@ -62,9 +62,9 @@ passport.use('local',new LocalStrategy(
                 done(null, {token});
             })
         }
-    catch(err){
-        done(err);
-    }
+        catch(err){
+            done(err);
+        }
     }
 ));
 
