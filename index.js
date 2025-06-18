@@ -71,14 +71,12 @@ passport.use('local',new LocalStrategy(
 passport.use('jwt',new JwtStrategy(opts,async function(jwt_payload,done){
     try{
         const user = await User.findById(jwt_payload.id);
-        if(user) return done(null,sanitizeUser(user));
+        if(user) return done(null,user);
         else return done(null,false);
     }
     catch(err){
         return done(err,false);
     }
-       
-        
     })
 );
 // this create session variable req.user on being called from callback
