@@ -92,6 +92,35 @@ passport.deserializeUser(function(user,cb){
     });
 });
 
+
+// This is your test secret API key.
+const stripe = require("stripe")('sk_test_51RbbnGCeqtfOoDyDVkl3NQ4XxYwxr7PCj9vNkmVdMMXERVRokI2uTRTFP3STLf36rYZQB9d1pBXJlsIfRv86XB1L004ZIMiXLd');
+
+app.use(express.static("public"));
+
+
+const calculateOrderAmount = (items) => {
+  return 1400;
+};
+
+server.post("/create-payment-intent", async (req, res) => {
+  const { items } = req.body;
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: calculateOrderAmount(items),
+    currency: "usd",
+    // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
+});
+
 async function main(){
     mongoose.connect('mongodb://127.0.0.1:27017/ecommerce-full-stack-databaase');
 }
