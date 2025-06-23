@@ -96,7 +96,7 @@ passport.deserializeUser(function(user,cb){
 // This is your test secret API key.
 const stripe = require("stripe")(process.env.STRIPE_API);
 
-app.use(express.static("public"));
+server.use(express.static("public"));
 
 
 const calculateOrderAmount = (items) => {
