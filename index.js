@@ -21,10 +21,11 @@ const cors = require('cors');
 const path = require('path')
 const { User } = require('./model/User');
 const { isAuth, sanitizeUser, cookieExtractor } = require('./services/common');
+const { Order } = require('./model/Order');
 
 const endpointSecret = process.env.ENDPOINT_SECRET_KEY;
 
-server.post('/webhook',express.raw({type: 'application/json'}), (request, response) => {
+server.post('/webhook',express.raw({type: 'application/json'}), async(request, response) => {
   let event = request.body;
   // Only verify the event if you have an endpoint secret defined.
   // Otherwise use the basic event deserialized with JSON.parse
@@ -47,6 +48,9 @@ server.post('/webhook',express.raw({type: 'application/json'}), (request, respon
   switch (event.type) {
     case 'payment_intent.succeeded':
       const paymentIntent = event.data.object;
+      const order = await Order.findById(paymentIntent.metadata.orderId);
+      order.paymentStatus = 'received';
+      await order.save();
       console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
       // Then define and call a method to handle the successful payment intent.
       // handlePaymentIntentSucceeded(paymentIntent);
@@ -92,6 +96,7 @@ server.use('/users',isAuth(),usersRouter.router);
 server.use('/auth',authRouter.router);
 server.use('/cart',isAuth(),cartRouter.router);
 server.use('/orders',isAuth(),orderRouter.router);
+server.get('*',(req,res)=>res.sendFile(path.join('build','index.html')))
 
 passport.use('local',new LocalStrategy(
     {usernameField:'email'},
@@ -144,7 +149,7 @@ server.use(express.static("public"));
 
 
 server.post("/create-payment-intent", async (req, res) => {
-  const { totalAmount } = req.body;
+  const { totalAmount, orderId } = req.body;
 
   // Create a PaymentIntent with the order amount and currency
   const paymentIntent = await stripe.paymentIntents.create({
@@ -154,6 +159,9 @@ server.post("/create-payment-intent", async (req, res) => {
     automatic_payment_methods: {
       enabled: true,
     },
+    metadata:{
+      orderId
+    }
   });
 
   res.send({
