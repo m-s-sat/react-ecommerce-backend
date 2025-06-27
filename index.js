@@ -18,8 +18,52 @@ const authRouter = require('./routes/Auth');
 const cartRouter = require('./routes/Cart');
 const orderRouter = require('./routes/Order');
 const cors = require('cors');
+const path = require('path')
 const { User } = require('./model/User');
 const { isAuth, sanitizeUser, cookieExtractor } = require('./services/common');
+
+const endpointSecret = process.env.ENDPOINT_SECRET_KEY;
+
+server.post('/webhook',express.raw({type: 'application/json'}), (request, response) => {
+  let event = request.body;
+  // Only verify the event if you have an endpoint secret defined.
+  // Otherwise use the basic event deserialized with JSON.parse
+  if (endpointSecret) {
+    // Get the signature sent by Stripe
+    const signature = request.headers['stripe-signature'];
+    try {
+      event = stripe.webhooks.constructEvent(
+        request.body,
+        signature,
+        endpointSecret
+      );
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      return response.sendStatus(400);
+    }
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
+      // Then define and call a method to handle the successful payment intent.
+      // handlePaymentIntentSucceeded(paymentIntent);
+      break;
+    case 'payment_method.attached':
+      const paymentMethod = event.data.object;
+      // Then define and call a method to handle the successful attachment of a PaymentMethod.
+      // handlePaymentMethodAttached(paymentMethod);
+      break;
+    default:
+      // Unexpected event type
+      console.log(`Unhandled event type ${event.type}.`);
+  }
+
+  // Return a 200 response to acknowledge receipt of the event
+  response.send();
+});
 
 const port = process.env.PORT;
 
@@ -28,8 +72,9 @@ const opts = {};
 opts.jwtFromRequest = cookieExtractor;
 opts.secretOrKey = SECRET_KEY;
 
-server.use(express.static('build'));
+server.use(express.static(path.resolve(__dirname,'build')));
 server.use(cookieParser());
+// server.use();
 server.use(express.json());
 server.use(cors({
     exposedHeaders:['X-Total-Count']
@@ -59,7 +104,7 @@ passport.use('local',new LocalStrategy(
                     return done(null, false, {message:'invalid credentials'});
                 }
                 const token = jwt.sign(sanitizeUser(user),SECRET_KEY);
-                done(null, {id:user.id,role:user.role});
+                done(null, {id:user.id,role:user.role,token:token});
             })
         }
         catch(err){
@@ -98,16 +143,12 @@ const stripe = require("stripe")(process.env.STRIPE_API);
 server.use(express.static("public"));
 
 
-const calculateOrderAmount = (items) => {
-  return 1400;
-};
-
 server.post("/create-payment-intent", async (req, res) => {
-  const { items } = req.body;
+  const { totalAmount } = req.body;
 
   // Create a PaymentIntent with the order amount and currency
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: calculateOrderAmount(items),
+    amount: totalAmount*100,
     currency: "usd",
     // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
     automatic_payment_methods: {
@@ -121,7 +162,7 @@ server.post("/create-payment-intent", async (req, res) => {
 });
 
 async function main(){
-    mongoose.connect('mongodb://127.0.0.1:27017/ecommerce-full-stack-databaase');
+    mongoose.connect(process.env.MONGODB_URL);
 }
 main().then(()=>{
     console.log("mongodb connected");
