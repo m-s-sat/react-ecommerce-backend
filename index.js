@@ -72,7 +72,7 @@ const opts = {};
 opts.jwtFromRequest = cookieExtractor;
 opts.secretOrKey = SECRET_KEY;
 
-server.use(express.static(path.resolve(__dirname,'build')));
+server.use(express.static(path.join(__dirname,'build')));
 server.use(cookieParser());
 // server.use();
 server.use(express.json());
