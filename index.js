@@ -97,8 +97,9 @@ server.use('/auth',authRouter.router);
 server.use('/cart',isAuth(),cartRouter.router);
 // orders are colliding with the frontend hence i use diff endpoints for the backend
 server.use('/orders',isAuth(),orderRouter.router);
-// server.use('*',(req,res)=>res.sendFile(path.resolve(__dirname,'build','index.html')))
-
+server.get(/^(?!\/api).*/, (req, res) => { 
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 passport.use('local',new LocalStrategy(
     {usernameField:'email'},
     async function (email, password, done){
@@ -169,7 +170,6 @@ server.post("/create-payment-intent", async (req, res) => {
     clientSecret: paymentIntent.client_secret,
   });
 });
-
 async function main(){
     mongoose.connect(process.env.MONGODB_URL);
 }
