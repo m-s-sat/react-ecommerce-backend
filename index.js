@@ -97,7 +97,7 @@ server.use('/auth',authRouter.router);
 server.use('/cart',isAuth(),cartRouter.router);
 // orders are colliding with the frontend hence i use diff endpoints for the backend
 server.use('/orders',isAuth(),orderRouter.router);
-server.get('*',(req,res)=>res.sendFile(path.join('build','index.html')))
+// server.use('*',(req,res)=>res.sendFile(path.resolve(__dirname,'build','index.html')))
 
 passport.use('local',new LocalStrategy(
     {usernameField:'email'},
@@ -161,7 +161,7 @@ server.post("/create-payment-intent", async (req, res) => {
       enabled: true,
     },
     metadata:{
-      orderId
+      orderId: orderId
     }
   });
 
