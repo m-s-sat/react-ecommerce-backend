@@ -95,6 +95,7 @@ server.use('/brands',isAuth(),brandsRouter.router);
 server.use('/users',isAuth(),usersRouter.router);
 server.use('/auth',authRouter.router);
 server.use('/cart',isAuth(),cartRouter.router);
+// orders are colliding with the frontend hence i use diff endpoints for the backend
 server.use('/orders',isAuth(),orderRouter.router);
 server.get('*',(req,res)=>res.sendFile(path.join('build','index.html')))
 
