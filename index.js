@@ -17,11 +17,16 @@ const usersRouter = require('./routes/User');
 const authRouter = require('./routes/Auth');
 const cartRouter = require('./routes/Cart');
 const orderRouter = require('./routes/Order');
+const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path')
 const { User } = require('./model/User');
 const { isAuth, sanitizeUser, cookieExtractor } = require('./services/common');
 const { Order } = require('./model/Order');
+
+// Email
+
+
 
 const endpointSecret = process.env.ENDPOINT_SECRET_KEY;
 
@@ -97,6 +102,8 @@ server.use('/auth',authRouter.router);
 server.use('/cart',isAuth(),cartRouter.router);
 // orders are colliding with the frontend hence i use diff endpoints for the backend
 server.use('/orders',isAuth(),orderRouter.router);
+
+
 server.get(/^(?!\/api).*/, (req, res) => { 
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
