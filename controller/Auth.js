@@ -78,3 +78,6 @@ exports.resetPassword = async(req,res)=>{
         res.sendStatus(400);
     }
 }
+exports.logOut = async(req,res)=>{
+    res.cookie('jwt',null,{expires: new Date(Date.now()),httpOnly:true}).sendStatus(200);
+}
